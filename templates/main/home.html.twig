@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ parent() }}{% endblock %}
+
+{% block body %}
+    {% block nav %}
+        {% include ("navbar.html.twig") %}
+    {% endblock %}
+
+    {% if  app.user %}
+        <h2 class="text-center">Bienvenue {{ app.user.username }} !</h2>
+
+    {% endif %}
+
+{% endblock %}

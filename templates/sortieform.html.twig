@@ -1,0 +1,123 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    {% block header %}
+        {% block nav %}
+            {% include ("navbar.html.twig") %}
+        {% endblock %}
+    {% endblock %}
+    <h3 class="text-center p-3">{% block h3 %}{% endblock %}</h3>
+    <div class="container py-6 ">
+        {% for message in app.flashes('success') %}
+            <div class="flash-message alert alert-success">
+                {{ message }}
+            </div>
+        {% endfor %}
+        <div class="alert alert-success alert-dismissible fade" role="alert" id="buttonAlert">
+            <strong>Success - </strong> La sortie a bien été supprimée !
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="row">
+            <div class="conteneur col-md-10 mx-auto">
+                {{ form_start(sortieForm) }}
+                <div class="form-group row">
+                    <div class="col-sm-6">
+                        {{ form_row(sortieForm.nom) }}
+                    </div>
+                    <div class="col-sm-6">
+                        {% block campusNom %}
+                        {% endblock %}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-6">
+                        {{ form_row(sortieForm.datedebut) }}
+                        {{ form_row(sortieForm.datecloture) }}
+                    </div>
+                    <div class="col-sm-6">
+                        {{ form_row(sortieForm.lieu) }}
+                        <div class="" id="ville">
+                            <label class="required" for="sorties_lieux">Lieu</label>
+                            <select id="sorties_lieux" name="lieux" required="required" class="form-control"
+                                    multiple="multiple">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-sm-6">
+                        {{ form_row(sortieForm.nbinscriptionsmax) }}
+                        {{ form_row(sortieForm.duree) }}
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="rueLieu" class="required">Ville</label>
+                        <input type="text" id="rueLieu" disabled="disabled"
+                               required="required" class="form-control" value="">
+
+                        <label for="cpLieu" class="required">Code postal</label>
+                        <input type="text" id="cpLieu" disabled="disabled"
+                               required="required" class="form-control" value="">
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-sm-6">
+                        {{ form_row(sortieForm.descriptioninfos) }}
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="latitudeLieu" class="required">Latitude</label>
+                        <input type="text" id="latitudeLieu" disabled="disabled"
+                               class="form-control" value="">
+                        <label for="longitudeLieu" class="required">Longitude</label>
+                        <input type="text" id="longitudeLieu" disabled="disabled"
+                               class="form-control" value="">
+                    </div>
+                </div>
+
+                {% block btnAction %}
+                {% endblock %}
+                {{ form_end(sortieForm) }}
+                {% block btn %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+    <script>
+        //Ecouteur bouton ville
+        $("#sorties_lieu").on("change", function (e) {
+            $("#sorties_lieux").empty();
+            $.ajax({
+                url: "/sortir/public/searchLieu/" + e.target.value,
+                method: "GET"
+            })
+                .done(function (response) {
+                    $.each(response.lieux, function (index, value) {
+                        $("#sorties_lieux").append("<option value=" + value['id'] + ">" + value['nomLieu'] + " </option>");
+                    });
+
+                })
+        });
+
+        //Ecouteur bouton lieu
+        $("#sorties_lieux").on("change", function (e) {
+            $.ajax({
+                url: "/sortir/public/detailsLieu/" + e.target.value,
+                method: "GET"
+            })
+                .done(function (response) {
+                    $('#rueLieu').val(response.detailsLieu[0]['rue']);
+                    $('#cpLieu').val(response.detailsLieu[0]['codePostal']);
+                    $('#latitudeLieu').val(response.detailsLieu[0]['latitude']);
+                    $('#longitudeLieu').val(response.detailsLieu[0]['longitude']);
+                })
+        });
+
+    </script>
+    {% block js %}
+    {% endblock %}
+
+{% endblock %}
+
+

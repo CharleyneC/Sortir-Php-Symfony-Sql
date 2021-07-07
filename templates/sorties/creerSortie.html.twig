@@ -1,0 +1,15 @@
+{% extends 'sortieform.html.twig' %}
+{% block h3 %}
+    Créer une sortie
+{% endblock %}
+    {% block nav %}
+        {% include ("navbar.html.twig") %}
+    {% endblock %}
+{% block campusNom %}
+    {{ form_row(sortieForm.campus, {'value' : app.user.campus.nom}) }}
+{% endblock %}
+{% block btnAction %}
+    <div class="row col-2 p-2 m-3 pr-4">
+        <button class="btnRegister btn btn-lg btn-primary" type="submit">Enregistrer</button>
+    </div>
+{% endblock %}

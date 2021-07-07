@@ -1,0 +1,149 @@
+{% extends 'sortieform.html.twig' %}
+{% block h3 %}
+    Consulter une sortie
+{% endblock %}
+{% block nav %}
+    {% include ("navbar.html.twig") %}
+{% endblock %}
+{% block campusNom %}
+    {{ form_row(sortieForm.campus, {'value' : campus.nom}) }}
+{% endblock %}
+{% block btnAction %}
+    <div style="float: right" class="row col-3 p-5">
+        <button class="btnSave btn btn-lg btn-primary">Sauvegarder</button>
+    </div>
+{% endblock %}
+{% block btn %}
+    <div style="float: left" class="row col-3 p-5 ">
+        <button class="btnEdit btn btn-lg btn-secondary">Modifier</button>
+    </div>
+    <div style="float: left" class="row col-3 p-5 ">
+        <button class="btnDelete btn btn-lg btn-danger">Supprimer</button>
+    </div>
+{% endblock %}
+ {% block js %}
+     <script>
+         //Désactiver tous les champs
+         $(document).ready(function () {
+             $("#sorties_nom").prop("disabled", true);
+             $("#sorties_datedebut").prop("disabled", true);
+             $("#sorties_datecloture").prop("disabled", true);
+             $("#sorties_nbinscriptionsmax").prop("disabled", true);
+             $("#sorties_duree").prop("disabled", true);
+             $("#sorties_descriptioninfos").prop("disabled", true);
+             $("#sorties_lieu").prop("disabled", true);
+             $("#sorties_lieux").prop("disabled", true);
+
+         });
+
+         //Afficher la ville
+         $(document).ready(function () {
+             $.ajax({
+                 url: "/sortir/public/villes/",
+                 method: "GET"
+             })
+                 .done(function (response) {
+                     let no_ville = {{ lieu.ville.no_Ville }};
+                     $.each(response.villes, function (index, value) {
+                         if (value['no_ville'] === no_ville) {
+                             $('#sorties_lieu').val(no_ville);
+                         }
+                     });
+
+                 })
+         });
+
+         //Afficher le lieu
+         $(document).ready(function () {
+             $("#sorties_lieux").empty();
+             $.ajax({
+                 url: "/sortir/public/searchLieu/" + {{ lieu.ville.no_Ville }},
+                 method: "GET"
+             })
+                 .done(function (response) {
+                     $.each(response.lieux, function (index, value) {
+                         if (value['id'] === {{ lieu.id }}) {
+                             $("#sorties_lieux").append("<option value=" + value['id'] + " selected>" + value['nomLieu'] + " </option>");
+                         } else {
+                             $("#sorties_lieux").append("<option value=" + value['id'] + ">" + value['nomLieu'] + " </option>");
+                         }
+                     });
+
+                 })
+         });
+
+         //Afficher les détails du lieu
+         $(document).ready(function () {
+             $.ajax({
+                 url: "/sortir/public/detailsLieu/" + {{ lieu.id }},
+                 method: "GET"
+             })
+                 .done(function (response) {
+                     $('#rueLieu').val(response.detailsLieu[0]['rue']);
+                     $('#cpLieu').val(response.detailsLieu[0]['codePostal']);
+                     $('#latitudeLieu').val(response.detailsLieu[0]['latitude']);
+                     $('#longitudeLieu').val(response.detailsLieu[0]['longitude']);
+                 })
+         });
+
+         //Activer tous les champs au clic sur le bouton Edit
+         $(".btnEdit").on("click", function (e) {
+             $("#sorties_nom").prop("disabled", false);
+             $("#sorties_datedebut").prop("disabled", false);
+             $("#sorties_datecloture").prop("disabled", false);
+             $("#sorties_nbinscriptionsmax").prop("disabled", false);
+             $("#sorties_duree").prop("disabled", false);
+             $("#sorties_descriptioninfos").prop("disabled", false);
+             $("#sorties_lieux").prop("disabled", false);
+             $("#sorties_lieu").prop("disabled", false);
+         });
+
+
+         //Ecouteur bouton ville
+         $("#sorties_lieux").on("change", function (e) {
+             $.ajax({
+                 url: "/sortir/public/detailsLieu/" + e.target.value,
+                 method: "GET"
+             })
+                 .done(function (response) {
+                     $('#rueLieu').val(response.detailsLieu[0]['rue']);
+                     $('#cpLieu').val(response.detailsLieu[0]['codePostal']);
+                     $('#latitudeLieu').val(response.detailsLieu[0]['latitude']);
+                     $('#longitudeLieu').val(response.detailsLieu[0]['longitude']);
+                 })
+         });
+
+         //Ecouteur bouton lieu
+         $("#sorties_lieux").on("click", function (e) {
+             $.ajax({
+                 url: "/sortir/public/detailsLieu/" + e.target.value,
+                 method: "GET"
+             })
+                 .done(function (response) {
+                     $('#rueLieu').val(response.detailsLieu[0]['rue']);
+                     $('#cpLieu').val(response.detailsLieu[0]['codePostal']);
+                     $('#latitudeLieu').val(response.detailsLieu[0]['latitude']);
+                     $('#longitudeLieu').val(response.detailsLieu[0]['longitude']);
+                 })
+         });
+
+         //Ecouteur bouton Delete
+         $(".btnDelete").on("click", function (e) {
+             $.ajax({
+                 url: "/sortir/public/sorties/delete/" + {{ sortie.id }},
+                 method: "DELETE"
+             })
+                 .done(function (response) {
+                     if (response.status === "deleted") {
+                         $(".conteneur").slideUp();
+                         $('h3').html("");
+                         $('.flash-message').hide();
+                         $("#buttonAlert").addClass('show')
+                     }
+                 })
+         });
+
+
+     </script>
+
+ {% endblock %}

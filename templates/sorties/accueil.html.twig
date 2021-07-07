@@ -1,0 +1,363 @@
+{% extends 'base.html.twig'%}
+
+
+{% block body %}
+    {{ parent () }}
+        {% if app.user %}
+        <h2 class="container-fluid col-md-3 m-2">Filtrer les sorties</h2>
+
+    <div class="container-fluid">
+    <div class="row">
+
+{#Recherche par campus#}
+            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4 m-md-2">
+
+                <nav id="select">
+                    <select class="form-select" aria-label="Default select example" id="selected">
+                        <option value="">Choisir un campus</option>
+                    </select>
+                </nav>
+{#Recherche par mot-clé#}
+                <div class="form-group has-feedback">
+                    <label class="control-label" for="input"></label>
+                    <input type="text" class="form-control" id="input"/>
+                </div>
+{#Recherche par Date#}
+                <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4 m-md-2">
+                    <label class="form-label" for="autoSizing">Entre le</label>
+                    <input id="open" type="date" class="form-control" aria-label="Date de début">
+                </div>
+
+
+                <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4 m-md-2">
+                    <label class="form-label" for="autoSizing">Et le</label>
+                    <input id="close" type="date" class="form-control" aria-label="Date de fin">
+                </div>
+            </div>
+
+
+{#Recherche par Catégories#}
+
+        <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4 p-md-2 mx-md-5 mt-md-4" id="checkbox">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="orga" value="{{ app.user.id }}">
+            <label class="form-check-label" for="flexSwitchCheckDefault">Sorties dont je suis l'organisateur(trice)</label>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="inscrit"
+                   value="{{app.user.id}}">
+            <label class="form-check-label" for="flexSwitchCheckChecked">Sorties auxquelles je suis inscrit(e)</label>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="noninscrit" value="{{app.user.id}}">
+            <label class="form-check-label" for="flexSwitchCheckDisabled">Sorties auxquelles je ne suis pas inscrit(e)</label>
+        </div>
+
+        <div class="form-check form-switch" id="datepasse">
+            <input class="form-check-input" type="checkbox" id="passe" value="{{"now"|date("d/m/Y")}}">
+            <label class="form-check-label" for="flexSwitchCheckCheckedDisabled">Sorties passées</label>
+        </div>
+    </div>
+
+    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3 m-md-2">
+
+        {% if app.user %}
+        <h3>Bienvenue {{ app.user.pseudo }}</h3>
+        {% endif %}
+        <h3>{{ "now"|date("d/m/Y") }}</h3>
+
+        <button type="submit" id="btn-trier" class="btn btn-secondary btn-lg">Rechercher</button>
+
+    </div>
+
+        </div>
+    </div>
+            {% endif %}
+    <table class="table table-dark table-striped" id="tri_campus">
+        <thead>
+        <tr>
+            <th scope="col">Nom de la sortie</th>
+            <th scope="col">Date de la sortie</th>
+            <th scope="col">Clôture</th>
+            <th scope="col">Nombre de place disponible</th>
+            <th scope="col">S'inscrit</th>
+            <th scope="col">Organisateur</th>
+            <th scope="col">Lieu</th>
+        </tr>
+        </thead>
+
+
+        <tbody id="tri-campus">
+
+        </tbody>
+    </table>
+
+    {% block javascripts %}
+        <script>
+            $(document).ready(function(){
+                $.ajax({
+                    url: "/sortir/public/afficherTab/",
+                    method: "GET"
+                })
+                    .done(function(response){
+                        $('#tri-campus').empty();
+                        $.each(response.sortie, function (value) {
+                            let sinscrire ="Si tu veux t'inscrire, connecte toi!"
+
+                            $("#tri-campus").append("<tr><td>" + response.sortie[value]['nom'] + "</td>" +
+                                "<td>" + response.sortie[value]['datedebut']['date'] + " </td>" +
+                                "<td>" + response.sortie[value]['datecloture']['date'] + " </td>" +
+                                "<td>" + response.sortie[value]['nbinscriptionsmax'] + " </td>" +
+                                "<td>" + sinscrire + "</td>" +
+                                "<td>" + response.sortie[value]['pseudo'] + " </td>" +
+                                "<td>" + response.sortie[value]['nomLieu'] + " </td></tr>");
+                        });
+                    })
+            });
+
+        {% if app.user %}
+            $(document).ready(function(){
+                $.ajax({
+                    url: "/sortir/public/afficherTab/",
+                    method: "GET"
+                })
+                    .done(function(response){
+                        $('#tri-campus').empty();
+                        $.each(response.sortie, function (value) {
+                            let idSorties = response.sortie[value]['id'];
+                            var url = "/sortir/public/sinscrireSortie/" + idSorties;
+                            let sinscrire = "Je m'inscris";
+
+                            $("#tri-campus").append("<tr><td>" + response.sortie[value]['nom'] + "</td>" +
+                                "<td>" + response.sortie[value]['datedebut']['date'] + " </td>" +
+                                "<td>" + response.sortie[value]['datecloture']['date'] + " </td>" +
+                                "<td>" + response.sortie[value]['nbinscriptionsmax'] + " </td>" +
+                                "<td><a href=" + url + ">"+ sinscrire +"</a></td>" +
+                                "<td>" + response.sortie[value]['pseudo'] + " </td>" +
+                                "<td>" + response.sortie[value]['nomLieu'] + " </td></tr>");
+                        });
+                    })
+            });
+            //au click sur le champs, les campus de la bdd s'affiche dans la liste déroulante
+            $('#selected').focus(function (e) {
+
+                $.ajax({
+                    url: "/sortir/public/choixCampus/",
+                    method: "GET"
+                })
+                    .done(function (response) {
+                        $('#selected').empty();
+                        $.each(response.campus, function (value) {
+                            $("#selected").append("<option value=" + response.campus[value]['nom'] + ">"
+                                + response.campus[value]['nom'] + " </option>").end();
+                        });
+                    })
+            });
+
+            //Rechercher par campus si le champ n'est pas vide
+            $("#btn-trier").click(function (e) {
+
+                if($("#selected").val() !== "") {
+                    let option = $("#selected").val();
+
+                    $.ajax({
+                        url: "/sortir/public/majCampus/" + option,
+                        method: "GET"
+                    })
+                        .done(function (response) {
+                            $('#tri-campus').empty();
+                            $.each(response.sortie, function (value) {
+
+                                let idSorties = response.sortie[value]['id'];
+                                var url = "/sortir/public/sinscrireSortie/" + idSorties;
+                                let sinscrire = "Je m'inscris";
+
+                                $("#tri-campus").append("<tr><td>" + response.sortie[value]['nom'] + "</td>" +
+                                    "<td>" + response.sortie[value]['datedebut']['date'] + " </td>" +
+                                    "<td>" + response.sortie[value]['datecloture']['date'] + " </td>" +
+                                    "<td>" + response.sortie[value]['nbinscriptionsmax'] + " </td>" +
+                                    "<td><a href=" + url + ">" + sinscrire + "</a></td>" +
+                                    "<td>" + response.sortie[value]['pseudo'] + " </td>" +
+                                    "<td>" + response.sortie[value]['nomLieu'] + " </td></tr>");
+                            });
+                        })
+                    $('#selected').empty();
+                }
+            });
+
+//recherche par mot clé
+            $("#btn-trier").on("click", function (e) {
+
+                if($("#input").val() !== "") {
+                    let keyword = $("#input").val();
+console.log(keyword)
+                    $.ajax({
+                        url: "/sortir/public/sorties/search/" + keyword,
+                        method: "GET"
+                    })
+                        .done(function (response) {
+                            $('#tri-campus').empty();
+                            $.each(response.sortie, function (value) {
+                                let idSorties = response.sortie[value]['id'];
+                                var url = "/sortir/public/sinscrireSortie/" + idSorties;
+                                let sinscrire = "Je m'inscris";
+
+                                $("#tri-campus").append("<tr><td>" + response.sortie[value]['nom'] + "</td>" +
+                                    "<td>" + response.sortie[value]['datedebut']['date'] + " </td>" +
+                                    "<td>" + response.sortie[value]['datecloture']['date'] + " </td>" +
+                                    "<td>" + response.sortie[value]['nbinscriptionsmax'] + " </td>" +
+                                    "<td><a href=" + url + ">"+ sinscrire +"</a></td>" +
+                                    "<td>" + response.sortie[value]['pseudo'] + " </td>" +
+                                    "<td>" + response.sortie[value]['nomLieu'] + " </td></tr>");
+
+                            });
+                        })
+                    }
+                });
+
+
+
+//Recherche par Date de début et date de clôture
+            $("#btn-trier").click(function (e) {
+
+                if($("#open").val() !== "" && $("#close").val() !== ""){
+                        let open = $("#open").val().replaceAll('-', ' ');
+                        let close = $("#close").val().replaceAll('-', ' ');
+                        $.ajax({
+                            url: "/sortir/public/searchDate/" + open +"/"+ close,
+                            method: "GET"
+                        })
+                            .done(function (response) {
+                                $('#tri-campus').empty();
+                                $.each(response.sortie, function (value) {
+                                    let idSorties = response.sortie[value]['id'];
+                                    var url = "/sortir/public/sinscrireSortie/" + idSorties;
+                                    let sinscrire = "Je m'inscris";
+
+                                    $("#tri-campus").append("<tr><td>" + response.sortie[value]['nom'] + "</td>" +
+                                        "<td>" + response.sortie[value]['datedebut']['date'] + " </td>" +
+                                        "<td>" + response.sortie[value]['datecloture']['date'] + " </td>" +
+                                        "<td>" + response.sortie[value]['nbinscriptionsmax'] + " </td>" +
+                                        "<td><a href=" + url + ">"+ sinscrire +"</a></td>" +
+                                        "<td>" + response.sortie[value]['pseudo'] + " </td>" +
+                                        "<td>" + response.sortie[value]['nomLieu'] + " </td></tr>");
+                                });
+                                $('#open').empty();
+                                $('#close').empty();
+                            })}
+
+                    })
+
+//Recherche avec les checkbox
+            $('#btn-trier').click(function() {
+
+                if($('input[id=orga]').is(':checked') && $('input[id=orga]').val() !== "") {
+                    var choixorga = $('input[id=orga]').val();
+
+                    $.ajax({
+                        url: "/sortir/public/searchCheckboxOrga/" + choixorga,
+                        method: "GET"
+                    })
+                            .done(function (response) {
+                                $('#tri-campus').empty();
+                                $.each(response.sortie, function (value) {
+                                    let idSorties = response.sortie[value]['id'];
+                                    var url = "/sortir/public/sinscrireSortie/" + idSorties;
+                                    let sinscrire = "C'est toi l'organisateur!";
+
+                                    $("#tri-campus").append("<tr><td>" + response.sortie[value]['nom'] + "</td>" +
+                                        "<td>" + response.sortie[value]['datedebut']['date'] + " </td>" +
+                                        "<td>" + response.sortie[value]['datecloture']['date'] + " </td>" +
+                                        "<td>" + response.sortie[value]['nbinscriptionsmax'] + " </td>" +
+                                        "<td>"+ sinscrire +"</td>" +
+                                        "<td>" + response.sortie[value]['pseudo'] + " </td>" +
+                                        "<td>" + response.sortie[value]['nomLieu'] + " </td></tr>");
+                                });
+                            })}
+                    })
+
+
+            $('#btn-trier').click(function() {
+
+                if($('input[id=inscrit]').is(':checked') && $('input[id=inscrit]').val() !== "" ) {
+                    var choixinscrit = $('input[id=inscrit]').val();
+                    $.ajax({
+                        url: "/sortir/public/searchCheckboxInscrit/" + choixinscrit,
+                        method: "GET"
+                    })
+                        .done(function (response) {
+                            $('#tri-campus').empty();
+                            var mess = "Tu es déjà inscrit à cette sorti"
+                            $.each(response.sortie, function (value) {
+                                $("#tri-campus").append("<tr><td>" + response.sortie[value]['nom'] + "</td>" +
+                                    "<td>" + response.sortie[value]['datedebut']['date'] + " </td>" +
+                                    "<td>" + response.sortie[value]['datecloture']['date'] + " </td>" +
+                                    "<td>" + response.sortie[value]['nbinscriptionsmax'] + " </td>" +
+                                    "<td>" + mess + " </td>" +
+                                    "<td>" + response.sortie[value]['pseudo'] + " </td>" +
+                                    "<td>" + response.sortie[value]['nomLieu'] + " </td></tr>");
+                            });
+                        })}
+            })
+
+            $('#btn-trier').click(function() {
+
+                if($('input[id=noninscrit]').is(':checked') && $('input[id=noninscrit]').val() !== "" ) {
+                    var choixnoninscrit = $('input[id=noninscrit]').val();
+
+                      $.ajax({
+                        url: "/sortir/public/searchCheckboxNonInscrit/" + choixnoninscrit,
+                        method: "GET"
+                    })
+                        .done(function (response) {
+                            $('#tri-campus').empty();
+                            $.each(response.sortie, function (value) {
+                                let idSorties = response.sortie[value]['id'];
+                                var url = "/sortir/public/sinscrireSortie/" + idSorties;
+                                let sinscrire = "Je m'inscris";
+
+                                $("#tri-campus").append("<tr><td>" + response.sortie[value]['nom'] + "</td>" +
+                                    "<td>" + response.sortie[value]['datedebut']['date'] + " </td>" +
+                                    "<td>" + response.sortie[value]['datecloture']['date'] + " </td>" +
+                                    "<td>" + response.sortie[value]['nbinscriptionsmax'] + " </td>" +
+                                    "<td><a href=" + url + ">"+ sinscrire +"</a></td>" +
+                                    "<td>" + response.sortie[value]['pseudo'] + " </td>" +
+                                    "<td>" + response.sortie[value]['nomLieu'] + " </td></tr>");
+                            });
+                        })}
+            })
+
+            $('#btn-trier').click(function() {
+
+                if($('input[id=passe]').is(':checked') && $('input[id=passe]') != "   ") {
+
+                    var choixpasse = $("input[id=passe]").val().replaceAll('/', ' ');
+
+                    $.ajax({
+                        url: "/sortir/public/searchCheckboxDate/" + choixpasse,
+                        method: "GET"
+                    })
+                        .done(function (response) {
+                            $('#tri-campus').empty();
+                            $.each(response.sortie, function (value) {
+                                let idSorties = response.sortie[value]['id'];
+                                var url = "/sortir/public/sinscrireSortie/" + idSorties;
+                                let sinscrire = "Je m'inscris";
+
+                                $("#tri-campus").append("<tr><td>" + response.sortie[value]['nom'] + "</td>" +
+                                    "<td>" + response.sortie[value]['datedebut']['date'] + " </td>" +
+                                    "<td>" + response.sortie[value]['datecloture']['date'] + " </td>" +
+                                    "<td>" + response.sortie[value]['nbinscriptionsmax'] + " </td>" +
+                                    "<td><a href=" + url + ">"+ sinscrire +"</a></td>" +
+                                    "<td>" + response.sortie[value]['pseudo'] + " </td>" +
+                                    "<td>" + response.sortie[value]['nomLieu'] + " </td></tr>");
+                            });
+                        })}
+            })
+
+        {% endif %}
+
+        </Script>
+    {% endblock %}
+
+{% endblock %}
